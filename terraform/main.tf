@@ -12,17 +12,14 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "aws_s3_bucket" "react_app_bucket" {
-  bucket = "devops-deploy-project"   # bucket name you gave
-  acl    = "public-read"
-
-  website {
-    index_document = "index.html"
-  }
+# ✅ You already created the bucket manually in AWS Console  
+# So we just reference it here
+locals {
+  bucket_name = "devops-deploy-project"
 }
 
 resource "aws_s3_bucket_public_access_block" "public_access" {
-  bucket                  = aws_s3_bucket.react_app_bucket.id
+  bucket                  = local.bucket_name
   block_public_acls       = false
   block_public_policy     = false
   ignore_public_acls      = false
@@ -30,7 +27,7 @@ resource "aws_s3_bucket_public_access_block" "public_access" {
 }
 
 resource "aws_s3_bucket_policy" "public_policy" {
-  bucket = aws_s3_bucket.react_app_bucket.id
+  bucket = local.bucket_name
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -39,7 +36,7 @@ resource "aws_s3_bucket_policy" "public_policy" {
         Effect    = "Allow",
         Principal = "*",
         Action    = ["s3:GetObject"],
-        Resource  = "${aws_s3_bucket.react_app_bucket.arn}/*"
+        Resource  = "arn:aws:s3:::${local.bucket_name}/*"
       }
     ]
   })
@@ -48,7 +45,7 @@ resource "aws_s3_bucket_policy" "public_policy" {
 resource "aws_s3_bucket_object" "react_build_files" {
   for_each = fileset("../build", "**/*.*")
 
-  bucket = aws_s3_bucket.react_app_bucket.id
+  bucket = local.bucket_name
   key    = each.value
   source = "../build/${each.value}"
   acl    = "public-read"
