@@ -12,44 +12,79 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# ✅ You already created the bucket manually in AWS Console  
-# So we just reference it here
 locals {
   bucket_name = "devops-deploy-project"
 }
 
-resource "aws_s3_bucket_public_access_block" "public_access" {
-  bucket                  = local.bucket_name
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+# CloudFront Origin Access Identity (OAI)
+resource "aws_cloudfront_origin_access_identity" "oai" {
+  comment = "OAI for accessing S3 bucket"
 }
 
-resource "aws_s3_bucket_policy" "public_policy" {
+# Allow CloudFront to access your private S3 bucket
+resource "aws_s3_bucket_policy" "cloudfront_policy" {
   bucket = local.bucket_name
 
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Effect    = "Allow",
-        Principal = "*",
-        Action    = ["s3:GetObject"],
-        Resource  = "arn:aws:s3:::${local.bucket_name}/*"
+        Effect = "Allow",
+        Principal = {
+          AWS = aws_cloudfront_origin_access_identity.oai.iam_arn
+        },
+        Action   = ["s3:GetObject"],
+        Resource = "arn:aws:s3:::${local.bucket_name}/*"
       }
     ]
   })
 }
 
-resource "aws_s3_bucket_object" "react_build_files" {
+# CloudFront distribution
+resource "aws_cloudfront_distribution" "react_app_cdn" {
+  origin {
+    domain_name = "${local.bucket_name}.s3.amazonaws.com"
+    origin_id   = "s3-${local.bucket_name}"
+
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
+    }
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "s3-${local.bucket_name}"
+
+    viewer_protocol_policy = "redirect-to-https"
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+  }
+
+  price_class = "PriceClass_100" # Cheapest option (US, EU, etc.)
+
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+
+# Upload React build files to S3
+resource "aws_s3_object" "react_build_files" {
   for_each = fileset("../build", "**/*.*")
 
   bucket = local.bucket_name
   key    = each.value
   source = "../build/${each.value}"
-  acl    = "public-read"
-
+  etag   = filemd5("../build/${each.value}")
   content_type = lookup({
     html = "text/html",
     css  = "text/css",
@@ -59,4 +94,12 @@ resource "aws_s3_bucket_object" "react_build_files" {
     jpg  = "image/jpeg",
     svg  = "image/svg+xml"
   }, split(".", each.value)[1], "application/octet-stream")
+}
+
+# Invalidate CloudFront cache after deployment
+resource "aws_cloudfront_distribution_invalidation" "invalidate" {
+  distribution_id = aws_cloudfront_distribution.react_app_cdn.id
+  paths           = ["/*"]
+
+  depends_on = [aws_s3_object.react_build_files]
 }

@@ -30,13 +30,8 @@ pipeline {
         stage('Deploy to AWS via Terraform') {
             steps {
                 dir('terraform') {
-                    withCredentials([
-                        string(credentialsId: 'aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
-                        string(credentialsId: 'aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
-                    ]) {
-                        sh 'terraform init'
-                        sh 'terraform apply -auto-approve'
-                    }
+                    sh 'terraform init'
+                    sh 'terraform apply -auto-approve'
                 }
             }
         }
