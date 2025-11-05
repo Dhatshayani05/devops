@@ -1,3 +1,7 @@
+variable "AWS_ACCESS_KEY_ID" {}
+variable "AWS_SECRET_ACCESS_KEY" {}
+
+# Optional (can be removed if unused)
 variable "security_group_id" {
   default = "sg-0cfa06fed7a4649c7"
 }
@@ -7,7 +11,7 @@ variable "subnet_id" {
 }
 
 variable "region" {
-  default = "eu-west-2"
+  default = "us-east-1"
 }
 
 variable "UNIQUE_ANIMAL_IDENTIFIER" {

@@ -8,20 +8,16 @@ terraform {
   required_version = ">= 1.0.0"
 }
 
-provider "aws" {
-  region = "us-east-1"
-}
-
 locals {
   bucket_name = "devops-deploy-project"
 }
 
-# CloudFront Origin Access Identity (OAI)
+# Create CloudFront Origin Access Identity
 resource "aws_cloudfront_origin_access_identity" "oai" {
-  comment = "OAI for accessing S3 bucket"
+  comment = "OAI for accessing S3 bucket securely"
 }
 
-# Allow CloudFront to access your private S3 bucket
+# Attach CloudFront access permissions to S3 bucket
 resource "aws_s3_bucket_policy" "cloudfront_policy" {
   bucket = local.bucket_name
 
@@ -40,7 +36,7 @@ resource "aws_s3_bucket_policy" "cloudfront_policy" {
   })
 }
 
-# CloudFront distribution
+# CloudFront Distribution
 resource "aws_cloudfront_distribution" "react_app_cdn" {
   origin {
     domain_name = "${local.bucket_name}.s3.amazonaws.com"
@@ -59,7 +55,6 @@ resource "aws_cloudfront_distribution" "react_app_cdn" {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "s3-${local.bucket_name}"
-
     viewer_protocol_policy = "redirect-to-https"
 
     forwarded_values {
@@ -70,14 +65,20 @@ resource "aws_cloudfront_distribution" "react_app_cdn" {
     }
   }
 
-  price_class = "PriceClass_100" # Cheapest option (US, EU, etc.)
+  price_class = "PriceClass_100"
 
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
 }
 
-# Upload React build files to S3
+# Upload build files to S3
 resource "aws_s3_object" "react_build_files" {
   for_each = fileset("../build", "**/*.*")
 
@@ -96,7 +97,7 @@ resource "aws_s3_object" "react_build_files" {
   }, split(".", each.value)[1], "application/octet-stream")
 }
 
-# Invalidate CloudFront cache after deployment
+# CloudFront cache invalidation
 resource "aws_cloudfront_distribution_invalidation" "invalidate" {
   distribution_id = aws_cloudfront_distribution.react_app_cdn.id
   paths           = ["/*"]
