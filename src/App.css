@@ -1,0 +1,75 @@
+.logo {
+  border-radius: 50%;
+}
+
+.display-fact {
+    margin: auto;
+    width: 50%;
+    position: relative;
+    /* background-color: rgb(233, 101, 101); */
+    width: 1000px;
+    height: 200px;
+    border-radius: 25px;
+    border-style: groove;
+    padding: 10px;
+    top: 150px;
+    left: 0px;
+    right: 0;
+    bottom: 0;
+    font-family: montserrat;
+    font-size: 30px;
+    text-align: center;
+    overflow: auto;
+    color: rgb(233, 125, 98);
+    font-weight: bold;
+    backdrop-filter: blur(25px);
+    /* filter: blur(3px);
+    -webkit-filter: blur(3px); */
+}
+
+.get_fact {
+  position: relative;
+  border: none;
+  background: #1c60dd;
+  color: #ffffff !important;
+  font-weight: 100;
+  padding: 20px;
+  text-transform: uppercase;
+  border-radius: 6px;
+  display: inline-block;
+  transition: all 0.3s ease 0s;
+  margin-left: 400px;
+  }
+
+  .get_fact:hover {
+    color: #404040 !important;
+    font-weight: 700 !important;
+    letter-spacing: 3px;
+    background: none;
+    -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    transition: all 0.3s ease 0s;
+  }
+
+.get_background {
+  border: none;
+  background: #1c60dd;
+  color: #ffffff !important;
+  font-weight: 100;
+  padding: 20px;
+  text-transform: uppercase;
+  border-radius: 6px;
+  display: inline-block;
+  transition: all 0.3s ease 0s;
+  margin-left: 800px;
+  }
+
+  .get_background:hover {
+    color: #404040 !important;
+    font-weight: 700 !important;
+    letter-spacing: 3px;
+    background: none;
+    -webkit-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    -moz-box-shadow: 0px 5px 40px -10px rgba(0,0,0,0.57);
+    transition: all 0.3s ease 0s;
+    }
