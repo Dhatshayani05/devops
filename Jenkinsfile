@@ -2,6 +2,7 @@ pipeline {
     agent any
     environment {
         PATH = "/opt/homebrew/bin:${env.PATH}"   // or /usr/local/bin based on which node
+        NODE_OPTIONS="--openssl-legacy-provider"
         AWS_ACCESS_KEY_ID     = credentials('aws-access-key-id')
         AWS_SECRET_ACCESS_KEY = credentials('aws-secret-access-key')
         AWS_DEFAULT_REGION    = "us-east-1"
