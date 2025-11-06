@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        PATH = "/opt/homebrew/bin:${env.PATH}"     // For Mac npm/node
-        NODE_OPTIONS = "--openssl-legacy-provider"
+        PATH = "/opt/homebrew/bin:${env.PATH}"
+        NODE_OPTIONS="--openssl-legacy-provider"
         AWS_DEFAULT_REGION = "us-east-1"
     }
 
@@ -29,14 +29,10 @@ pipeline {
 
         stage('Deploy to AWS via Terraform') {
             steps {
-                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                withCredentials([aws(accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY', credentialsId: 'aws-creds')]) {
                     dir('terraform') {
-                        sh """
-                          terraform init
-                          terraform apply -auto-approve \
-                            -var="AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" \
-                            -var="AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}"
-                        """
+                        sh 'terraform init'
+                        sh 'terraform apply -auto-approve'
                     }
                 }
             }
