@@ -97,10 +97,3 @@ resource "aws_s3_object" "react_build_files" {
   }, split(".", each.value)[1], "application/octet-stream")
 }
 
-# CloudFront cache invalidation
-resource "aws_cloudfront_distribution_invalidation" "invalidate" {
-  distribution_id = aws_cloudfront_distribution.react_app_cdn.id
-  paths           = ["/*"]
-
-  depends_on = [aws_s3_object.react_build_files]
-}
